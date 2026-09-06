@@ -1,22 +1,16 @@
-version: '3.8'
+
+Version: '3.8'
 x-common:
   database:
     &db-environment
-    # Do not remove the "&db-password" from the end of the line below, it is important
-    # for Panel functionality.
     MYSQL_PASSWORD: &db-password "CHANGE_ME"
     MYSQL_ROOT_PASSWORD: "CHANGE_ME_TOO"
   panel:
     &panel-environment
-    # This URL should be the URL that your reverse proxy routes to the panel server
     APP_URL: "https://refactored-carnival-7v6wg5vw6wggfrp6w-80.app.github.dev"
-    # A list of valid timezones can be found here: http://php.net/manual/en/timezones.php
     APP_TIMEZONE: "UTC"
     APP_SERVICE_AUTHOR: "noreply@example.com"
-    TRUSTED_PROXIES: "*" # Set this to your proxy IP
-    # Uncomment the line below and set to a non-empty value if you want to use Let's Encrypt
-    # to generate an SSL certificate for the Panel.
-    # LE_EMAIL: ""
+    TRUSTED_PROXIES: "*"
   mail:
     &mail-environment
     MAIL_FROM: "noreply@example.com"
@@ -26,14 +20,7 @@ x-common:
     MAIL_USERNAME: ""
     MAIL_PASSWORD: ""
     MAIL_ENCRYPTION: "true"
- 
-#
-# ------------------------------------------------------------------------------------------
-# DANGER ZONE BELOW
-#
-# The remainder of this file likely does not need to be changed. Please only make modifications
-# below if you understand what you are doing.
-#
+
 services:
   database:
     image: mariadb:10.5
@@ -45,9 +32,6 @@ services:
       <<: *db-environment
       MYSQL_DATABASE: "panel"
       MYSQL_USER: "pterodactyl"
-  cache:
-    image: redis:alpine
-    restart: always
   panel:
     image: ghcr.io/pterodactyl/panel:latest
     restart: always
@@ -56,7 +40,6 @@ services:
       - "443:443"
     links:
       - database
-      - cache
     volumes:
       - "/srv/pterodactyl/var/:/app/var/"
       - "/srv/pterodactyl/nginx/:/etc/nginx/http.d/"
@@ -67,10 +50,9 @@ services:
       DB_PASSWORD: *db-password
       APP_ENV: "production"
       APP_ENVIRONMENT_ONLY: "false"
-      CACHE_DRIVER: "redis"
-      SESSION_DRIVER: "redis"
-      QUEUE_DRIVER: "redis"
-      REDIS_HOST: "cache"
+      CACHE_DRIVER: "file"
+      SESSION_DRIVER: "file"
+      QUEUE_DRIVER: "database"
       DB_HOST: "database"
       DB_PORT: "3306"
 networks:
@@ -78,3 +60,4 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
+        
